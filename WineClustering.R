@@ -6,15 +6,6 @@ wine1 <- wine1
 attach(wine1)
 str(wine1) #get data types of all attributes
 
-#subsetting data
-class1 <- wine1[which(Class == 1),]
-class2 <- wine1[which(Class == 2),]
-class3 <- wine1[which(Class == 3),]
-
-summary(class1)
-summary(class2)
-summary(class3)
-
 #plotting some visualizations
 ggplot(wine1, aes(Class, Alcohol, group=Class)) + geom_boxplot() + ggtitle("Alcohol")
 ggplot(wine1, aes(Class, Malic.Acid, group=Class)) + geom_boxplot() + ggtitle("Malic Acid")
@@ -35,6 +26,8 @@ ggplot(wine1, aes(Class, Proline, group=Class)) + geom_boxplot() + ggtitle("Prol
 #Are able to differentiate better on other properties (Total Phenols, Flavanoids, Color Intensity, Proline, etc.)
 #Class 1 for the Malic Acid attribute contains a lot of outliers
 #May be difficult to create distinguished clusters after running algorithms
+
+#Food for thought on other iterations: Do feature selection before running kmeans??
 
 set.seed(1)
 ######K-means: outliers might be a problem here
@@ -73,7 +66,22 @@ tbl1 #same contingency table as kmeans??
 
 #PAM algorithm actually performed worse than kmeans algorithm
 #PAM has less than 50% accuracy vs. kmeans which had ~75% accuracy
-
+#accuracy computed manually by adding up number of True Pos/Total Count * 100
 #visualize in cluster plot
 fviz_cluster(wpam, ggtheme = theme_minimal())
 
+
+
+#####Hierarchical clustering
+#Example 1
+dwine <- dist(as.matrix(wine1))
+hwine <- hclust(dwine)
+plot(hwine)
+
+install.packages("viridisLite")
+install.packages("viridis")
+fviz_dend(hwine, k_colors = c("#2E9FDF", "#00AFBB", "#E7B800"),
+          rect = TRUE, show_labels = FALSE)
+
+
+          
