@@ -77,6 +77,14 @@ ggplot(ww, aes(quality,alcohol,group=quality)) + geom_boxplot(outlier.size = 1) 
 #clear indication that a high alcohol content equates to a high quality wine
 
 
+install.packages("ggpubr")
+library("ggpubr")
+ggscatter(ww, x = "residual.sugar", y = "density", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Residual Sugar", ylab = "Density")
+
+
 #test for normality - variables do not follow a normal distribution bc all p-values are less than 0
 shapiro.test(ww$fixed.acidity)
 shapiro.test(ww$volatile.acidity)
@@ -92,18 +100,11 @@ shapiro.test(ww$alcohol)
 shapiro.test(ww$quality)
 
 
-install.packages("ggpubr")
-library("ggpubr")
-ggscatter(ww, x = "residual.sugar", y = "density", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Residual Sugar", ylab = "Density")
-
-
 #looking at multicollinearity - calculating spearman rank correlation along with associated p values
 library("Hmisc")
 wcorr <- rcorr(as.matrix(ww),type = "spearman")
 wcorr
+#Overall not many features are correlated with each other, and not highly either
 #pH and fixed acidity negatively correlated = -0.42
 #density highly pos. correlated with residual sugar = 0.72
 #alcohol negatively correlated with residual sugar = -0.45
@@ -112,9 +113,39 @@ wcorr
 #density is negatively correlated with alcohol = -0.82
 #quality correlated with alcohol = 0.44
 
+#Trying out PCA
+library("factoextra")
+#apply PCA
+ww.pca <- prcomp(ww[,1:11], center=TRUE, scale. = TRUE)
+fviz_eig(ww.pca) #visualizing eigenvalues
+#analyzing results: standards deviations & rotations (loadings)
+print(ww.pca)
+#importance of the PC's -
+#at least 93% of the variance is explained by the first 8 PC's, at least 97% of the varince explained by first 9PC's
+summary(ww.pca)
 
-#Potential Appraoch: classification?
+#turn predictor variable into ordinal categorical variable
+ww$quality <- as.factor(ww$quality) #turn into categorical
+is.ordered(quality) #checking to see if ordered - no
+ww$quality <- as.ordered(ww$quality)
+ww$quality #checked that quality was an ordered factor
 
-
-
-
+#train test split - doing a 75/25 split
+set.seed(100)
+r.ww <- dim(ww)[1]
+#75% to train
+train.rate = 0.75
+#remainder to test
+test.rate = r.ww*(1.-train.rate)
+#construct random set of training indices
+train.ind <- sample(1:r.ww, train.rate*r.ww, replace=FALSE)
+#construct random set of testing indices
+test.ind <- setdiff(1:r.ww,train.ind)
+#build train dataset
+train <- subset(ww[train.ind,], select = c("fixed.acidity", "volatile.acidity", "citric.acid", "residual.sugar", "chlorides","free.sulfur.dioxide", "total.sulfur.dioxide", "density", "pH", "sulphates", "alcohol")) 
+#build test dataset
+test <- subset(ww[test.ind,], select = c("fixed.acidity", "volatile.acidity", "citric.acid", "residual.sugar", "chlorides","free.sulfur.dioxide", "total.sulfur.dioxide", "density", "pH", "sulphates", "alcohol"))
+#labels for train dataset
+train.lbls <- ww$quality[train.ind]
+#labels for test dataset
+test.lbls <- ww$quality[test.ind]
