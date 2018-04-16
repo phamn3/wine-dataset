@@ -11,7 +11,7 @@ sum(is.na(ww)) #no NA's in the dataset
 summary(ww) #physiochemical statistics; mean quality looks to be 6
 
 #visualizations to start off with - looking at distributions/spread of each variable
-ggplot(ww, aes(ww$quality)) + geom_histogram(binwidth = 1) + ggtitle("Quality")
+ggplot(ww, aes(ww$quality)) + geom_bar(stat="count") + ggtitle("Quality") +xlab("Quality")
   #A lot of medium quality white wines (qualit of either 5 or 6); there are very few execellent and poor white wines
 ggplot(ww, aes(x=factor(0),y=ww$quality)) + geom_boxplot(outlier.size=1) + xlab(" ") +
   ggtitle("Quality") + scale_x_discrete(breaks = NULL) + coord_flip()
@@ -149,3 +149,28 @@ test <- subset(ww[test.ind,], select = c("fixed.acidity", "volatile.acidity", "c
 train.lbls <- ww$quality[train.ind]
 #labels for test dataset
 test.lbls <- ww$quality[test.ind]
+
+
+#First Model - kNN
+install.packages("gmodels")
+library(gmodels)
+knn_pred <- knn(train = train, test = test, train.lbls, k=70)
+summary(knn_pred)
+CrossTable(knn_pred,test.lbls, chisq = FALSE)
+#Accuracy
+(110+444+11)/nrow(test) #very low accuracy
+
+
+#Second Model - Random Forest
+set.seed(1)
+install.packages("randomForest")
+library(randomForest)
+train.new <- cbind(train, train.lbls) #rebuilding original train dataset
+names(train.new)[names(train.new) == 'train.lbls'] <- 'quality'
+rf_mod <- randomForest(quality~., data=train.new)
+rf_mod
+rf_pred <- predict(rf_mod, newdata = test)
+table(rf_pred, test.lbls)
+(11+239+426+116+14)/nrow(test)
+
+#Third Model 
