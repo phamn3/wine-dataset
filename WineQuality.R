@@ -173,4 +173,33 @@ rf_pred <- predict(rf_mod, newdata = test)
 table(rf_pred, test.lbls)
 (11+239+426+116+14)/nrow(test)
 
-#Third Model 
+#trying to tune RF model
+set.seed(1)
+rf_mod_tuned <- tuneRF(train, train.lbls, stepFactor = 1.5, improve = 1e-5, ntree=500)
+print(rf_mod_tuned)
+plot(rf_mod_tuned$mtry, rf_mod_tuned$OOBError) #mtry=3 is the most accurate value
+rf_mod2 <- randomForest(quality~.,data=train.new, ntree=500, mtry=3)
+rf_mod2
+rf_pred2 <- predict(rf_mod2, newdata=test)
+table(rf_pred2,test.lbls)
+(10+246+428+114+14)/nrow(test)
+
+
+#Third Model - SVM Classifier
+install.packages("e1071")
+library(e1071)
+svm_mod <- svm(quality~., train.new)
+summary(svm_mod)
+svm_pred <- predict(svm_mod, test)
+table(svm_pred, test.lbls)
+(2+210+428+54)/nrow(test)
+
+
+#trying to tune SVM model
+svm_tune <- tune(svm, train.x=train, train.y = train.lbls, kernel="radial",  ranges=list(cost=10^(-1:2), gamma=c(.5,1,2)))
+svm_tune #cost of 10 and gamma of 1
+svm_mod_tuned <- svm(quality~.,train.new, kernel="radial", cost=10, gamma=1)
+summary(svm_mod_tuned)
+svm_tuned_pred <- predict(svm_mod_tuned,test)
+table(svm_tuned_pred,test.lbls)
+(7+226+438+105+15)/nrow(test) #increased accuracy of SVM
