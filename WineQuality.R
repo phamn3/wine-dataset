@@ -13,7 +13,7 @@ sum(is.na(ww)) #no NA's in the dataset
 summary(ww) #physiochemical statistics; mean quality looks to be 6
 
 #visualizations to start off with - looking at distributions/spread of each variable
-require(ggplot2)
+if(!(require(ggplot2))) install.packages("ggplot2")
 ggplot(ww, aes(ww$quality)) + geom_bar(stat="count") + ggtitle("Quality") +xlab("Quality")
   #A lot of medium quality white wines (qualit of either 5 or 6); there are very few execellent and poor white wines
 ggplot(ww, aes(x=factor(0),y=ww$quality)) + geom_boxplot(outlier.size=1) + xlab(" ") +
